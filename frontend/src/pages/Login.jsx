@@ -1,6 +1,41 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
+
+function ThemeToggle() {
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === 'dark';
+
+  return (
+    <button
+      onClick={toggleTheme}
+      aria-label="Toggle dark mode"
+      className="relative h-9 w-9 rounded-lg flex items-center justify-center text-muted dark:text-dark-muted hover:bg-paper dark:hover:bg-dark-line transition"
+    >
+      {isDark ? (
+        <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5">
+          <circle cx="12" cy="12" r="4.5" stroke="currentColor" strokeWidth="1.7" />
+          <path
+            d="M12 2.5v2M12 19.5v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2.5 12h2M19.5 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+          />
+        </svg>
+      ) : (
+        <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5">
+          <path
+            d="M20 14.5A8.5 8.5 0 019.5 4a8.5 8.5 0 1010.5 10.5z"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinejoin="round"
+          />
+        </svg>
+      )}
+    </button>
+  );
+}
 
 export default function Login() {
   const { login } = useAuth();
@@ -27,6 +62,9 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-paper dark:bg-dark-bg px-4 py-10 transition-colors">
+      <div style={{ position: 'absolute', top: 20, right: 20 }}>
+        <ThemeToggle />
+      </div>
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-3">
