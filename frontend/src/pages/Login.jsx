@@ -61,7 +61,7 @@ export default function Login() {
               required
               value={form.email}
               onChange={handleChange}
-              placeholder="you@example.com"
+              placeholder="Enter your email address"
               className="w-full rounded-lg border border-line dark:border-dark-line bg-paper/60 dark:bg-dark-bg px-3.5 py-2.5 text-sm text-ink dark:text-white focus:border-focus-500 focus:ring-1 focus:ring-focus-500 outline-none transition"
             />
           </div>
@@ -77,7 +77,7 @@ export default function Login() {
               required
               value={form.password}
               onChange={handleChange}
-              placeholder="••••••••"
+              placeholder="Enter your password"
               className="w-full rounded-lg border border-line dark:border-dark-line bg-paper/60 dark:bg-dark-bg px-3.5 py-2.5 text-sm text-ink dark:text-white focus:border-focus-500 focus:ring-1 focus:ring-focus-500 outline-none transition"
             />
           </div>
