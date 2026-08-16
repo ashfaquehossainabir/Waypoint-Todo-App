@@ -38,8 +38,45 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
+  const updateUser = useCallback((updatedUser) => {
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+    setUser(updatedUser);
+  }, []);
+
+  const updateProfile = useCallback(async (name, email) => {
+    const { data } = await api.put('/auth/profile', { name, email });
+    localStorage.setItem('user', JSON.stringify(data.user));
+    setUser(data.user);
+    return data.user;
+  }, []);
+
+  const updatePassword = useCallback(async (currentPassword, newPassword) => {
+    const { data } = await api.put('/auth/password', { currentPassword, newPassword });
+    return data;
+  }, []);
+
+  const deleteAccount = useCallback(async (password) => {
+    const { data } = await api.delete('/auth/account', { data: { password } });
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
+    return data;
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        login,
+        register,
+        logout,
+        updateUser,
+        updateProfile,
+        updatePassword,
+        deleteAccount,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

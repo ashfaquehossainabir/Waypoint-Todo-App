@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import ConfirmLogoutModal from "../components/ConfirmLogoutModal";
+import UserAvatar from './UserAvatar';
+import AccountModal from './AccountModal';
 
 const NAV_LINKS = [
   { to: '/dashboard', label: 'Dashboard' },
@@ -44,9 +45,9 @@ function ThemeToggle() {
 }
 
 export default function Navbar() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
-  const [showLogout, setShowLogout] = useState(false);
+  const [showAccount, setShowAccount] = useState(false);
 
   const linkClass = ({ isActive }) =>
     `px-3 py-2 rounded-lg text-sm font-medium transition ${
@@ -86,16 +87,12 @@ export default function Navbar() {
               <p className="text-sm font-medium leading-tight">{user?.name}</p>
               <p className="text-xs text-muted dark:text-dark-muted leading-tight">{user?.email}</p>
             </div>
-            <button
-              onClick={() => setShowLogout(true)}
-              className="text-sm font-medium text-muted dark:text-dark-muted hover:text-ember transition px-3 py-1.5 rounded-lg hover:bg-ember/10"
-            >
-              Sign out
-            </button>
+            <UserAvatar name={user?.name} onClick={() => setShowAccount(true)} />
           </div>
 
-          <div className="flex items-center gap-1 md:hidden">
+          <div className="flex items-center gap-2 md:hidden">
             <ThemeToggle />
+            <UserAvatar name={user?.name} onClick={() => setShowAccount(true)} size="sm" />
             <button
               onClick={() => setOpen((o) => !o)}
               aria-label="Toggle menu"
@@ -135,31 +132,27 @@ export default function Navbar() {
                 </NavLink>
               ))}
 
-              <div className="flex items-center justify-between px-3 py-3 mt-1 border-t border-line dark:border-dark-line">
-                <div>
-                  <p className="text-sm font-medium leading-tight">{user?.name}</p>
-                  <p className="text-xs text-muted dark:text-dark-muted leading-tight">{user?.email}</p>
+              <button
+                onClick={() => {
+                  setOpen(false);
+                  setShowAccount(true);
+                }}
+                className="flex items-center gap-3 px-3 py-3 mt-1 border-t border-line dark:border-dark-line text-left"
+              >
+                <UserAvatar name={user?.name} onClick={() => {}} size="sm" />
+                <div className="min-w-0">
+                  <p className="text-sm font-medium leading-tight truncate">{user?.name}</p>
+                  <p className="text-xs text-muted dark:text-dark-muted leading-tight truncate">
+                    {user?.email}
+                  </p>
                 </div>
-                <button
-                  onClick={() => setShowLogout(true)}
-                  className="text-sm font-medium text-ember px-3 py-1.5 rounded-lg hover:bg-ember/10 transition"
-                >
-                  Sign out
-                </button>
-              </div>
+              </button>
             </div>
           </div>
         )}
       </header>
 
-      <ConfirmLogoutModal
-        open={showLogout}
-        onCancel={() => setShowLogout(false)}
-        onConfirm={() => {
-          setShowLogout(false);
-          logout();
-        }}
-      />
+      <AccountModal open={showAccount} onClose={() => setShowAccount(false)} />
     </>
   );
 }
