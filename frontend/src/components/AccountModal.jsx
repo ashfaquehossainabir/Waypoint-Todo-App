@@ -155,11 +155,11 @@ export default function AccountModal({ open, onClose }) {
   return (
     <>
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-ink/40 backdrop-blur-sm p-0 sm:p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 backdrop-blur-sm p-4"
       onClick={onClose}
     >
       <div
-        className="w-full sm:max-w-md bg-surface dark:bg-dark-surface rounded-t-2xl sm:rounded-xl2 shadow-modal max-h-[92vh] sm:max-h-[88vh] overflow-y-auto scrollbar-thin"
+        className="w-full sm:max-w-md bg-surface dark:bg-dark-surface rounded-2xl sm:rounded-xl2 shadow-modal max-h-[92vh] sm:max-h-[88vh] overflow-y-auto scrollbar-thin"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
