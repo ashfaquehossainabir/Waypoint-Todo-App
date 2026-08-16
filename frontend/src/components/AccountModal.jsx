@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import ConfirmLogoutModal from './ConfirmLogoutModal';
 
 function getInitials(name) {
   if (!name) return '?';
@@ -41,6 +42,8 @@ export default function AccountModal({ open, onClose }) {
   });
   const [passwordStatus, setPasswordStatus] = useState({ error: '', success: '', saving: false });
 
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteStatus, setDeleteStatus] = useState({ error: '', deleting: false });
@@ -51,6 +54,7 @@ export default function AccountModal({ open, onClose }) {
       setProfileStatus({ error: '', success: '', saving: false });
       setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
       setPasswordStatus({ error: '', success: '', saving: false });
+      setShowLogoutConfirm(false);
       setShowDeleteConfirm(false);
       setDeletePassword('');
       setDeleteStatus({ error: '', deleting: false });
@@ -134,12 +138,22 @@ export default function AccountModal({ open, onClose }) {
     }
   };
 
-  const handleSignOut = () => {
+  const handleSignOutClick = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const handleConfirmSignOut = () => {
+    setShowLogoutConfirm(false);
     onClose();
     logout();
   };
 
+  const handleCancelSignOut = () => {
+    setShowLogoutConfirm(false);
+  };
+
   return (
+    <>
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-ink/40 backdrop-blur-sm p-0 sm:p-4"
       onClick={onClose}
@@ -298,7 +312,7 @@ export default function AccountModal({ open, onClose }) {
           {/* Sign out */}
           <section className="border-t border-line dark:border-dark-line pt-5">
             <button
-              onClick={handleSignOut}
+              onClick={handleSignOutClick}
               className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-line dark:border-dark-line text-sm font-medium text-ink dark:text-white px-4 py-2.5 hover:bg-paper dark:hover:bg-dark-line transition"
             >
               <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
@@ -370,5 +384,12 @@ export default function AccountModal({ open, onClose }) {
         </div>
       </div>
     </div>
+
+    <ConfirmLogoutModal
+      open={showLogoutConfirm}
+      onCancel={handleCancelSignOut}
+      onConfirm={handleConfirmSignOut}
+    />
+    </>
   );
 }
