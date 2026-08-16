@@ -195,11 +195,11 @@ export default function Dashboard() {
 
       {showCreate && (
         <div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-ink/40 backdrop-blur-sm p-0 sm:p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 backdrop-blur-sm p-4"
           onClick={() => setShowCreate(false)}
         >
           <div
-            className="w-full sm:max-w-lg bg-surface dark:bg-dark-surface rounded-t-2xl sm:rounded-xl2 shadow-modal max-h-[90vh] overflow-y-auto p-5 sm:p-6"
+            className="w-full sm:max-w-lg bg-surface dark:bg-dark-surface rounded-2xl sm:rounded-xl2 shadow-modal max-h-[90vh] overflow-y-auto p-5 sm:p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="font-display text-lg font-semibold text-ink dark:text-white mb-4">
