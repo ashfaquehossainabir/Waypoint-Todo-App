@@ -3,6 +3,7 @@ import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
 import AdminUserEditModal from '../components/AdminUserEditModal';
+import AdminResetPasswordModal from '../components/AdminResetPasswordModal';
 
 function getInitials(name) {
   if (!name) return '?';
@@ -35,6 +36,21 @@ function RoleBadge({ role }) {
   );
 }
 
+function StatusBadge({ isActive }) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full ${
+        isActive
+          ? 'bg-focus-50 dark:bg-focus-500/10 text-focus-700 dark:text-focus-300'
+          : 'bg-ember/10 text-ember'
+      }`}
+    >
+      <span className={`h-1.5 w-1.5 rounded-full ${isActive ? 'bg-focus-500' : 'bg-ember'}`} />
+      {isActive ? 'Active' : 'Deactivated'}
+    </span>
+  );
+}
+
 export default function AdminDashboard() {
   const { user: currentUser } = useAuth();
   const [users, setUsers] = useState([]);
@@ -45,6 +61,10 @@ export default function AdminDashboard() {
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
+  const [resettingUser, setResettingUser] = useState(null);
+  const [confirmStatus, setConfirmStatus] = useState(null);
+  const [statusSaving, setStatusSaving] = useState(false);
+  const [statusError, setStatusError] = useState('');
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -75,6 +95,7 @@ export default function AdminDashboard() {
     () => ({
       total: users.length,
       admins: users.filter((u) => u.role === 'admin').length,
+      active: users.filter((u) => u.isActive).length,
     }),
     [users]
   );
@@ -83,6 +104,26 @@ export default function AdminDashboard() {
     const { data } = await api.put(`/admin/users/${id}`, form);
     setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, ...data.user } : u)));
     setEditingUser(null);
+  };
+
+  const handleResetPassword = async (id, newPassword) => {
+    await api.put(`/admin/users/${id}/reset-password`, { newPassword });
+  };
+
+  const handleToggleStatus = async (targetUser) => {
+    setStatusSaving(true);
+    setStatusError('');
+    try {
+      const { data } = await api.patch(`/admin/users/${targetUser.id}/status`, {
+        isActive: !targetUser.isActive,
+      });
+      setUsers((prev) => prev.map((u) => (u.id === targetUser.id ? { ...u, ...data.user } : u)));
+      setConfirmStatus(null);
+    } catch (err) {
+      setStatusError(err.response?.data?.message || 'Could not update status.');
+    } finally {
+      setStatusSaving(false);
+    }
   };
 
   const handleDeleteUser = async (targetUser) => {
@@ -114,8 +155,8 @@ export default function AdminDashboard() {
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="bg-surface dark:bg-dark-surface border border-line dark:border-dark-line rounded-xl2 shadow-card px-4 py-2.5 text-center">
+          <div className="grid grid-cols-3 gap-2 xs:flex xs:items-center xs:gap-3">
+            <div className="bg-surface dark:bg-dark-surface border border-line dark:border-dark-line rounded-xl2 shadow-card px-3 sm:px-4 py-2.5 text-center">
               <p className="text-lg font-display font-semibold text-ink dark:text-white leading-tight">
                 {stats.total}
               </p>
@@ -123,7 +164,15 @@ export default function AdminDashboard() {
                 Users
               </p>
             </div>
-            <div className="bg-surface dark:bg-dark-surface border border-line dark:border-dark-line rounded-xl2 shadow-card px-4 py-2.5 text-center">
+            <div className="bg-surface dark:bg-dark-surface border border-line dark:border-dark-line rounded-xl2 shadow-card px-3 sm:px-4 py-2.5 text-center">
+              <p className="text-lg font-display font-semibold text-ink dark:text-white leading-tight">
+                {stats.active}
+              </p>
+              <p className="text-[11px] uppercase tracking-wide text-muted dark:text-dark-muted">
+                Active
+              </p>
+            </div>
+            <div className="bg-surface dark:bg-dark-surface border border-line dark:border-dark-line rounded-xl2 shadow-card px-3 sm:px-4 py-2.5 text-center">
               <p className="text-lg font-display font-semibold text-ink dark:text-white leading-tight">
                 {stats.admins}
               </p>
@@ -178,16 +227,17 @@ export default function AdminDashboard() {
         ) : (
           <>
             {/* ===== DESKTOP / TABLET TABLE ===== */}
-            <div className="hidden md:block bg-surface dark:bg-dark-surface border border-line dark:border-dark-line rounded-xl2 shadow-card overflow-hidden">
-              <table className="w-full text-sm">
+            <div className="hidden md:block bg-surface dark:bg-dark-surface border border-line dark:border-dark-line rounded-xl2 shadow-card overflow-x-auto">
+              <table className="w-full text-sm min-w-[820px] lg:min-w-0">
                 <thead>
                   <tr className="border-b border-line dark:border-dark-line text-left text-xs uppercase tracking-wide text-muted dark:text-dark-muted">
                     <th className="px-5 py-3 font-medium">User</th>
                     <th className="px-5 py-3 font-medium">Email</th>
                     <th className="px-5 py-3 font-medium">Role</th>
+                    <th className="px-5 py-3 font-medium">Status</th>
                     <th className="px-5 py-3 font-medium">Tasks</th>
-                    <th className="px-5 py-3 font-medium">Categories</th>
-                    <th className="px-5 py-3 font-medium">Joined</th>
+                    <th className="px-5 py-3 font-medium hidden lg:table-cell">Categories</th>
+                    <th className="px-5 py-3 font-medium hidden lg:table-cell">Joined</th>
                     <th className="px-5 py-3 font-medium text-right">Actions</th>
                   </tr>
                 </thead>
@@ -195,7 +245,9 @@ export default function AdminDashboard() {
                   {filteredUsers.map((u) => (
                     <tr
                       key={u.id}
-                      className="border-b last:border-b-0 border-line dark:border-dark-line hover:bg-paper/60 dark:hover:bg-dark-line/40 transition"
+                      className={`border-b last:border-b-0 border-line dark:border-dark-line hover:bg-paper/60 dark:hover:bg-dark-line/40 transition ${
+                        !u.isActive ? 'opacity-60' : ''
+                      }`}
                     >
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-3 min-w-0">
@@ -210,17 +262,20 @@ export default function AdminDashboard() {
                           </span>
                         </div>
                       </td>
-                      <td className="px-5 py-3.5 text-muted dark:text-dark-muted">{u.email}</td>
+                      <td className="px-5 py-3.5 text-muted dark:text-dark-muted truncate max-w-[220px]">{u.email}</td>
                       <td className="px-5 py-3.5">
                         <RoleBadge role={u.role} />
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <StatusBadge isActive={u.isActive} />
                       </td>
                       <td className="px-5 py-3.5 font-mono text-xs text-muted dark:text-dark-muted">
                         {u.completedTaskCount}/{u.taskCount}
                       </td>
-                      <td className="px-5 py-3.5 font-mono text-xs text-muted dark:text-dark-muted">
+                      <td className="px-5 py-3.5 font-mono text-xs text-muted dark:text-dark-muted hidden lg:table-cell">
                         {u.categoryCount}
                       </td>
-                      <td className="px-5 py-3.5 text-muted dark:text-dark-muted whitespace-nowrap">
+                      <td className="px-5 py-3.5 text-muted dark:text-dark-muted whitespace-nowrap hidden lg:table-cell">
                         {formatDate(u.createdAt)}
                       </td>
                       <td className="px-5 py-3.5">
@@ -228,6 +283,7 @@ export default function AdminDashboard() {
                           <button
                             onClick={() => setEditingUser(u)}
                             aria-label={`Edit ${u.name}`}
+                            title="Edit"
                             className="p-1.5 rounded text-muted dark:text-dark-muted hover:text-ink dark:hover:text-white hover:bg-paper dark:hover:bg-dark-line transition"
                           >
                             <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
@@ -241,12 +297,55 @@ export default function AdminDashboard() {
                             </svg>
                           </button>
                           <button
+                            onClick={() => setResettingUser(u)}
+                            aria-label={`Reset password for ${u.name}`}
+                            title="Reset password"
+                            className="p-1.5 rounded text-muted dark:text-dark-muted hover:text-ink dark:hover:text-white hover:bg-paper dark:hover:bg-dark-line transition"
+                          >
+                            <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
+                              <path
+                                d="M15 7a4 4 0 10-3.874 4.999L11 15h2l1 1-1 1 1 1-1 1h-2v2H9v-3.5l2.126-4.5A4 4 0 0115 7z"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                              <circle cx="15" cy="7" r="1" fill="currentColor" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => {
+                              setStatusError('');
+                              setConfirmStatus(u);
+                            }}
+                            disabled={u.id === currentUser?.id}
+                            aria-label={u.isActive ? `Deactivate ${u.name}` : `Activate ${u.name}`}
+                            title={u.isActive ? 'Deactivate' : 'Activate'}
+                            className="p-1.5 rounded text-muted dark:text-dark-muted hover:text-gold hover:bg-gold/10 transition disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                          >
+                            <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
+                              <path
+                                d="M12 3v8"
+                                stroke="currentColor"
+                                strokeWidth="1.7"
+                                strokeLinecap="round"
+                              />
+                              <path
+                                d="M6.5 6.5a7 7 0 1011 0"
+                                stroke="currentColor"
+                                strokeWidth="1.7"
+                                strokeLinecap="round"
+                              />
+                            </svg>
+                          </button>
+                          <button
                             onClick={() => {
                               setDeleteError('');
                               setConfirmDelete(u);
                             }}
                             disabled={u.id === currentUser?.id}
                             aria-label={`Delete ${u.name}`}
+                            title="Delete"
                             className="p-1.5 rounded text-muted dark:text-dark-muted hover:text-ember hover:bg-ember/10 transition disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                           >
                             <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
@@ -267,12 +366,14 @@ export default function AdminDashboard() {
               </table>
             </div>
 
-            {/* ===== MOBILE CARDS ===== */}
-            <div className="md:hidden space-y-3">
+            {/* ===== MOBILE / TABLET CARDS ===== */}
+            <div className="md:hidden grid grid-cols-1 sm:grid-cols-2 gap-3">
               {filteredUsers.map((u) => (
                 <div
                   key={u.id}
-                  className="bg-surface dark:bg-dark-surface border border-line dark:border-dark-line rounded-xl2 shadow-card p-4"
+                  className={`bg-surface dark:bg-dark-surface border border-line dark:border-dark-line rounded-xl2 shadow-card p-4 ${
+                    !u.isActive ? 'opacity-70' : ''
+                  }`}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
@@ -289,7 +390,10 @@ export default function AdminDashboard() {
                         <p className="text-xs text-muted dark:text-dark-muted truncate">{u.email}</p>
                       </div>
                     </div>
-                    <RoleBadge role={u.role} />
+                    <div className="flex flex-col items-end gap-1.5 shrink-0">
+                      <RoleBadge role={u.role} />
+                      <StatusBadge isActive={u.isActive} />
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-3 gap-2 mt-3.5 pt-3.5 border-t border-line dark:border-dark-line text-center">
@@ -319,12 +423,28 @@ export default function AdminDashboard() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 mt-3.5 pt-3.5 border-t border-line dark:border-dark-line">
+                  <div className="grid grid-cols-2 gap-2 mt-3.5 pt-3.5 border-t border-line dark:border-dark-line">
                     <button
                       onClick={() => setEditingUser(u)}
-                      className="flex-1 px-3 py-2 rounded-lg text-sm font-medium text-ink dark:text-white border border-line dark:border-dark-line hover:bg-paper dark:hover:bg-dark-line transition"
+                      className="px-3 py-2 rounded-lg text-sm font-medium text-ink dark:text-white border border-line dark:border-dark-line hover:bg-paper dark:hover:bg-dark-line transition"
                     >
                       Edit
+                    </button>
+                    <button
+                      onClick={() => setResettingUser(u)}
+                      className="px-3 py-2 rounded-lg text-sm font-medium text-ink dark:text-white border border-line dark:border-dark-line hover:bg-paper dark:hover:bg-dark-line transition"
+                    >
+                      Reset password
+                    </button>
+                    <button
+                      onClick={() => {
+                        setStatusError('');
+                        setConfirmStatus(u);
+                      }}
+                      disabled={u.id === currentUser?.id}
+                      className="px-3 py-2 rounded-lg text-sm font-medium text-gold border border-gold/30 hover:bg-gold/10 transition disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      {u.isActive ? 'Deactivate' : 'Activate'}
                     </button>
                     <button
                       onClick={() => {
@@ -332,7 +452,7 @@ export default function AdminDashboard() {
                         setConfirmDelete(u);
                       }}
                       disabled={u.id === currentUser?.id}
-                      className="flex-1 px-3 py-2 rounded-lg text-sm font-medium text-ember border border-ember/30 hover:bg-ember/10 transition disabled:opacity-30 disabled:cursor-not-allowed"
+                      className="px-3 py-2 rounded-lg text-sm font-medium text-ember border border-ember/30 hover:bg-ember/10 transition disabled:opacity-30 disabled:cursor-not-allowed"
                     >
                       Delete
                     </button>
@@ -350,6 +470,62 @@ export default function AdminDashboard() {
         onClose={() => setEditingUser(null)}
         onSave={handleSaveUser}
       />
+
+      <AdminResetPasswordModal
+        user={resettingUser}
+        onClose={() => setResettingUser(null)}
+        onReset={handleResetPassword}
+      />
+
+      {confirmStatus && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-ink/40 backdrop-blur-sm p-4"
+          onClick={() => !statusSaving && setConfirmStatus(null)}
+        >
+          <div
+            className="w-full max-w-sm bg-surface dark:bg-dark-surface rounded-xl2 shadow-modal p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="font-display text-lg font-semibold text-ink dark:text-white mb-2">
+              {confirmStatus.isActive ? 'Deactivate' : 'Activate'} {confirmStatus.name}?
+            </h3>
+            <p className="text-sm text-muted dark:text-dark-muted mb-5">
+              {confirmStatus.isActive
+                ? "They won't be able to sign in until their account is reactivated."
+                : 'They will be able to sign in again immediately.'}
+            </p>
+            {statusError && (
+              <div className="text-sm bg-ember/10 text-ember border border-ember/30 rounded-lg px-3 py-2 mb-4">
+                {statusError}
+              </div>
+            )}
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setConfirmStatus(null)}
+                disabled={statusSaving}
+                className="px-4 py-2 rounded-lg text-sm font-medium text-muted dark:text-dark-muted hover:bg-paper dark:hover:bg-dark-line transition disabled:opacity-60"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleToggleStatus(confirmStatus)}
+                disabled={statusSaving}
+                className={`px-4 py-2 rounded-lg text-sm font-medium text-white transition disabled:opacity-60 ${
+                  confirmStatus.isActive
+                    ? 'bg-ember hover:bg-ember/90'
+                    : 'bg-focus-500 hover:bg-focus-600'
+                }`}
+              >
+                {statusSaving
+                  ? 'Saving…'
+                  : confirmStatus.isActive
+                  ? 'Deactivate'
+                  : 'Activate'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {confirmDelete && (
         <div

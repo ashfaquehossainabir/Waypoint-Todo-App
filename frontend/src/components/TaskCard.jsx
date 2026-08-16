@@ -87,7 +87,7 @@ export default function TaskCard({ task, onOpen, onToggle, onDelete }) {
               e.stopPropagation();
               onDelete(task);
             }}
-            className="opacity-0 group-hover:opacity-100 text-muted dark:text-dark-muted hover:text-ember transition p-1 rounded"
+            className="opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 text-muted dark:text-dark-muted hover:text-ember transition p-1 rounded"
           >
             <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
               <path

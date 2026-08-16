@@ -85,6 +85,52 @@ const updateUser = async (req, res, next) => {
   }
 };
 
+// @route PATCH /api/admin/users/:id/status
+const setUserStatus = async (req, res, next) => {
+  try {
+    const { isActive } = req.body;
+
+    if (typeof isActive !== 'boolean') {
+      return res.status(400).json({ message: 'isActive must be true or false' });
+    }
+
+    if (req.params.id === req.user._id.toString() && !isActive) {
+      return res.status(400).json({ message: 'You cannot deactivate your own account' });
+    }
+
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    user.isActive = isActive;
+    await user.save();
+
+    res.json({ user: user.toSafeObject() });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @route PUT /api/admin/users/:id/reset-password
+const resetUserPassword = async (req, res, next) => {
+  try {
+    const { newPassword } = req.body;
+
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ message: 'New password must be at least 6 characters' });
+    }
+
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    user.password = newPassword;
+    await user.save();
+
+    res.json({ message: `Password reset for ${user.name}` });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @route DELETE /api/admin/users/:id
 const deleteUser = async (req, res, next) => {
   try {
@@ -107,4 +153,4 @@ const deleteUser = async (req, res, next) => {
   }
 };
 
-module.exports = { getUsers, updateUser, deleteUser };
+module.exports = { getUsers, updateUser, deleteUser, setUserStatus, resetUserPassword };
