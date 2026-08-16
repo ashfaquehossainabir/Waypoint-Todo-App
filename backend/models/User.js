@@ -23,6 +23,11 @@ const UserSchema = new mongoose.Schema(
       minlength: 6,
       select: false,
     },
+    role: {
+      type: String,
+      enum: ['user', 'admin'],
+      default: 'user',
+    },
   },
   { timestamps: true }
 );
@@ -43,6 +48,7 @@ UserSchema.methods.toSafeObject = function toSafeObject() {
     id: this._id,
     name: this.name,
     email: this.email,
+    role: this.role,
     createdAt: this.createdAt,
   };
 };

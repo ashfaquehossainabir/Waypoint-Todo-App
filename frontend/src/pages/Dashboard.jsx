@@ -199,7 +199,7 @@ export default function Dashboard() {
           onClick={() => setShowCreate(false)}
         >
           <div
-            className="w-full sm:max-w-lg bg-surface dark:bg-dark-surface rounded-2xl sm:rounded-xl2 shadow-modal max-h-[90vh] overflow-y-auto p-5 sm:p-6"
+            className="w-full sm:max-w-lg bg-surface dark:bg-dark-surface rounded-xl2 shadow-modal max-h-[90vh] overflow-y-auto p-5 sm:p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="font-display text-lg font-semibold text-ink dark:text-white mb-4">

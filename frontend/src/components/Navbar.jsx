@@ -49,6 +49,9 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [showAccount, setShowAccount] = useState(false);
 
+  const navLinks =
+    user?.role === 'admin' ? [...NAV_LINKS, { to: '/admin', label: 'Admin' }] : NAV_LINKS;
+
   const linkClass = ({ isActive }) =>
     `px-3 py-2 rounded-lg text-sm font-medium transition ${
       isActive
@@ -73,7 +76,7 @@ export default function Navbar() {
             </NavLink>
 
             <nav className="hidden md:flex items-center gap-1">
-              {NAV_LINKS.map((link) => (
+              {navLinks.map((link) => (
                 <NavLink key={link.to} to={link.to} className={linkClass}>
                   {link.label}
                 </NavLink>
@@ -115,7 +118,7 @@ export default function Navbar() {
         {open && (
           <div className="md:hidden fixed top-[64px] left-0 right-0 z-40 border-t border-line dark:border-dark-line bg-paper dark:bg-dark-bg shadow-lg">
             <div className="container-app py-3 flex flex-col gap-1">
-              {NAV_LINKS.map((link) => (
+              {navLinks.map((link) => (
                 <NavLink
                   key={link.to}
                   to={link.to}

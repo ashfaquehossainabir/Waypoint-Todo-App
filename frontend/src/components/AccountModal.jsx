@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import ConfirmLogoutModal from './ConfirmLogoutModal';
 
 function getInitials(name) {
   if (!name) return '?';
@@ -42,11 +41,11 @@ export default function AccountModal({ open, onClose }) {
   });
   const [passwordStatus, setPasswordStatus] = useState({ error: '', success: '', saving: false });
 
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteStatus, setDeleteStatus] = useState({ error: '', deleting: false });
+
+  const [confirmSignOut, setConfirmSignOut] = useState(false);
 
   useEffect(() => {
     if (open && user) {
@@ -54,10 +53,10 @@ export default function AccountModal({ open, onClose }) {
       setProfileStatus({ error: '', success: '', saving: false });
       setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
       setPasswordStatus({ error: '', success: '', saving: false });
-      setShowLogoutConfirm(false);
       setShowDeleteConfirm(false);
       setDeletePassword('');
       setDeleteStatus({ error: '', deleting: false });
+      setConfirmSignOut(false);
     }
   }, [open, user]);
 
@@ -138,28 +137,23 @@ export default function AccountModal({ open, onClose }) {
     }
   };
 
-  const handleSignOutClick = () => {
-    setShowLogoutConfirm(true);
+  const handleSignOut = () => {
+    setConfirmSignOut(true);
   };
 
   const handleConfirmSignOut = () => {
-    setShowLogoutConfirm(false);
+    setConfirmSignOut(false);
     onClose();
     logout();
   };
 
-  const handleCancelSignOut = () => {
-    setShowLogoutConfirm(false);
-  };
-
   return (
-    <>
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 backdrop-blur-sm p-4"
       onClick={onClose}
     >
       <div
-        className="w-full sm:max-w-md bg-surface dark:bg-dark-surface rounded-2xl sm:rounded-xl2 shadow-modal max-h-[92vh] sm:max-h-[88vh] overflow-y-auto scrollbar-thin"
+        className="w-full sm:max-w-md bg-surface dark:bg-dark-surface rounded-xl2 shadow-modal max-h-[88vh] overflow-y-auto scrollbar-thin"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -312,7 +306,7 @@ export default function AccountModal({ open, onClose }) {
           {/* Sign out */}
           <section className="border-t border-line dark:border-dark-line pt-5">
             <button
-              onClick={handleSignOutClick}
+              onClick={handleSignOut}
               className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-line dark:border-dark-line text-sm font-medium text-ink dark:text-white px-4 py-2.5 hover:bg-paper dark:hover:bg-dark-line transition"
             >
               <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
@@ -383,13 +377,45 @@ export default function AccountModal({ open, onClose }) {
           </section>
         </div>
       </div>
-    </div>
 
-    <ConfirmLogoutModal
-      open={showLogoutConfirm}
-      onCancel={handleCancelSignOut}
-      onConfirm={handleConfirmSignOut}
-    />
-    </>
+      {confirmSignOut && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-ink/40 backdrop-blur-sm p-4"
+          onClick={(e) => {
+            e.stopPropagation();
+            setConfirmSignOut(false);
+          }}
+        >
+          <div
+            className="w-full max-w-sm bg-surface dark:bg-dark-surface rounded-xl2 shadow-modal p-6"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Confirm sign out"
+          >
+            <h3 className="font-display text-lg font-semibold text-ink dark:text-white mb-2">
+              Confirm sign out
+            </h3>
+            <p className="text-sm text-muted dark:text-dark-muted mb-5">
+              Are you sure you want to sign out of your account?
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setConfirmSignOut(false)}
+                className="px-4 py-2 rounded-lg text-sm font-medium text-muted dark:text-dark-muted hover:bg-paper dark:hover:bg-dark-line transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmSignOut}
+                className="px-4 py-2 rounded-lg text-sm font-medium bg-ember text-white hover:bg-ember/90 transition"
+              >
+                Sign out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
